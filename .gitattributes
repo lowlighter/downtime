@@ -1,0 +1,7 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Linguist ignores
+static/site linguist-generated
+hosts/* linguist-generated
+status/* linguist-generated

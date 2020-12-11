@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="56">
+  <style>
+    article {
+      font-size: 14px;
+      font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji;
+      color: #777777;
+      margin: 4px;
+      width: 100%;
+      border-left: 4px solid transparent;
+      display: flex;
+    }
+    .up {
+      border-color: #18b663;
+    }
+    .up.slow {
+      border-color: #fb8c00;
+    }
+    .down {
+      border-color: #e53935;
+    }
+    img {
+      margin-left: 8px;
+      height: 20px;
+      width: 20px;
+      border-radius: 16px;
+    }
+    aside {
+      margin: 0 8px;
+      flex-grow: 1;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+    }
+    h1 {
+      margin: 0;
+      padding: 0;
+      font-size: 14px;
+      font-weight: bold;
+      flex-grow: 1;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .status svg {
+      margin: 0 8px;
+    }
+    .up .status {
+      color: #18b663;
+    }
+    .up.slow .status {
+      color: #fb8c00;
+    }
+    .down .status {
+      color: #e53935;
+    }
+    .url {
+      font-size: 12px;
+      opacity: .9;
+    }
+    .metrics {
+      display: flex;
+      flex-direction: column;
+    }
+    .metric {
+      font-size: 10px;
+      opacity: .7;
+      margin-right: 16px;
+    }
+  </style>
+  <foreignObject x="0" y="0" width="100%" height="100%">
+    <article class="badge <%= host.uptime.latest ? "up" : "down" %> <%= host.response_time.latest >= host.status_slow_ms ? "slow" : "" %>" xmlns="http://www.w3.org/1999/xhtml">
+      <img src="<%= host.icon %>" />
+      <aside>
+        <header>
+          <h1>
+          <% if (host.title) { %>
+            <%= host.title %>
+          <% } else { %>
+            <%= host.name %>:<%= host.port %>
+          <% } %>
+          </h1>
+          <div class="status">
+            <% if (host.uptime.latest) { %>
+              <% if (host.response_time.latest >= host.status_slow_ms) { %>
+                Slow <svg xmlns="http://www.w3.org/2000/svg" fill="#fb8c00" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm9 3a1 1 0 11-2 0 1 1 0 012 0zm-.25-6.25a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5z"></path></svg>
+              <% } else { %>
+                Up <svg xmlns="http://www.w3.org/2000/svg" fill="#18b663" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0zM0 8a8 8 0 1116 0A8 8 0 010 8zm11.78-1.72a.75.75 0 00-1.06-1.06L6.75 9.19 5.28 7.72a.75.75 0 00-1.06 1.06l2 2a.75.75 0 001.06 0l4.5-4.5z"></path></svg>
+              <% } %>
+            <% } else { %>
+              Down <svg xmlns="http://www.w3.org/2000/svg" fill="#e53935" viewBox="0 0 16 16" width="16" height="16"><path fill-rule="evenodd" d="M3.404 12.596a6.5 6.5 0 119.192-9.192 6.5 6.5 0 01-9.192 9.192zM2.344 2.343a8 8 0 1011.313 11.314A8 8 0 002.343 2.343zM6.03 4.97a.75.75 0 00-1.06 1.06L6.94 8 4.97 9.97a.75.75 0 101.06 1.06L8 9.06l1.97 1.97a.75.75 0 101.06-1.06L9.06 8l1.97-1.97a.75.75 0 10-1.06-1.06L8 6.94 6.03 4.97z"></path></svg>
+            <% } %>
+          </div>
+        </header>
+        <div class="url">
+          <% if (host.title) { %>
+            <%= host.name %>:<%= host.port %>
+          <% } else { %><pre> </pre><% } %>
+        </div>
+        <div class="metrics">
+          <div class="metric">
+            <% if (Number.isFinite(host.uptime.last24h)||Number.isFinite(host.response_time.last24h)) { %>
+            <% } else { %><pre> </pre><% } %>
+            /24h
+            <% if (Number.isFinite(host.uptime.last24h)) { %>
+            - <%= (host.uptime.last24h*100).toFixed(2) %>% uptime
+            <% } %>
+            <% if (Number.isFinite(host.response_time.last24h)) { %>
+             - <%= Math.round(host.response_time.last24h) %> ms response time
+            <% } %>
+          </div>
+        </div>
+      </aside>
+    </article>
+  </foreignObject>
+</svg>

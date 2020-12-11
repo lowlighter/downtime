@@ -1,0 +1,39 @@
+name: Connection tests
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  push:
+    branches: [ master ]
+
+jobs:
+  connection-tests:
+    if: "(github.repository != 'lowlighter/downtime')||(contains(toJSON(github.event.commits.*.message), '[connection-tests]'))"
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup
+        uses: denolib/setup-deno@v2
+        with:
+          deno-version: v1.6.0
+
+      - name: Install ncat
+        run: sudo apt-get install nmap
+
+      - name: Run connection tests
+        run: deno run --allow-net --allow-read --allow-write --allow-run --unstable source/tests.ts
+
+      - name: Commit results
+        run: |
+          git config --local user.email "null@github.com"
+          git config --local user.name "GitHub Action"
+          git add static/site hosts status README.md
+          git commit -m "Update connection status"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}

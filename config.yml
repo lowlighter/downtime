@@ -1,0 +1,43 @@
+# Host list
+# "name" is mandatory and will be used as target to connect
+# "title" will be displayed as "human name" instead of "name" if specified
+# All defaults values can be overriden per host basis
+hosts:
+  # Example / test root domain
+  - name: google.com
+    title: Google
+  # Example / test url
+  - name: github.com/lowlighter/downtime
+    title: Downtime repository
+  # Example / test ip with port using ncat
+  - name: "8.8.8.8"
+    title: Google DNS
+    port: 53
+    use: ncat
+  # Example / unavailable website
+  - name: unavailable.website.com
+    title: Unavailable website
+
+# Site configuration
+site:
+  # Title
+  title: Downtime
+  # Favicon / logo
+  favicon: https://simon.lecoq.io/src/icon.png
+  # Refresh rate of status images for client
+  refresh_rate_sec: 120
+
+# Default values
+defaults:
+  # Default command to use
+  # Supported values are :
+  # - "curl"   [supports both uptime and response time, but only for HTTP/S requests]
+  # - "ncat"   [supports both uptime and response time]
+  # - "telnet" [supports only uptime]
+  use: curl
+  # Default timeout
+  timeout: 30
+  # Default port
+  port: 443
+  # Default number of ms before considering that host have latency problems
+  status_slow_ms: 30000

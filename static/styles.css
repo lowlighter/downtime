@@ -1,0 +1,40 @@
+body{
+  font-family: lato, -apple-system, BlinkMacSystemFont, segoe ui, Roboto, helvetica neue, Arial, sans-serif, apple color emoji, segoe ui emoji, segoe ui symbol;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+  padding: 0 1rem;
+  background-color: #06090F;
+  color: #C9D1D9;
+}
+@media (prefers-color-scheme: light) {
+  body {
+    background: white;
+    color: black;
+  }
+}
+nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 4rem;
+}
+nav .name {
+  max-width: 864px;
+  width: 100%;
+  font-weight: bold;
+}
+main {
+  display: flex;
+  flex-wrap: wrap;
+  max-width: 864px;
+  width: 100%;
+}
+main img {
+  margin: 4px 16px;
+  width: 400px;
+  max-width: 100%;
+}
