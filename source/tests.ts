@@ -19,7 +19,7 @@
     //Prepare hostname, filename and paths
       const hostname = `${name}:${port}`
       const filename = encodeURIComponent(hostname).replace(/%[0-9A-F]{2}/gi, "-")
-      const path = {hosts:`hosts/${filename}`, status:`status/${filename}.svg`}
+      const path = {hosts:`hosts/${filename}`, status:`status/${filename}.svg`, badges:`status/${filename}-badge.svg`}
 
     //Prepare host data
       const data = {name, created:new Date()} as host
@@ -105,8 +105,8 @@
           }
       }
     //Save result to file
-      const result = {icon:`http://s2.googleusercontent.com/s2/favicons?domain_url=${name}`, port, status_slow_ms, files:{filename, path},
-        ...data, updated, tests:tests+1, uptime, response_time,
+      const result = {icon:`http://s2.googleusercontent.com/s2/favicons?domain_url=${name}`, port, status_slow_ms,
+        ...data, updated, tests:tests+1, uptime, response_time, files:{filename, path},
       }
       await Deno.writeTextFile(path.hosts, JSON.stringify(result))
 
@@ -119,8 +119,12 @@
       }))
 
     //Generate status SVG
-      await Deno.writeTextFile(path.status, await ejs.renderFileToString("templates/status.svg",{host:{...result, icon}}))
+      await Deno.writeTextFile(path.status, await ejs.renderFileToString("templates/status.svg", {host:{...result, icon}}))
       debug(hostname, `generated ${path.status}`)
+
+    //Generate status badge SVG
+      await Deno.writeTextFile(path.badges, await ejs.renderFileToString("templates/badge.svg", {host:{...result, icon}}))
+      debug(hostname, `generated ${path.badges}`)
 
     //Return result
       return result as host
@@ -149,7 +153,7 @@
     //Clean generated files among hosts and status
       for (const directory of ["hosts", "status"] as const) {
         //List files to keep
-          const keeping = [directory, ...hosts.map((host:host) => host.files.path[directory]), ...{hosts:["hosts/list"], status:[]}[directory]]
+          const keeping = [directory, ...hosts.map((host:host) => host.files.path[directory]), ...{hosts:["hosts/list"], status:[...hosts.map((host:host) => host.files.path.badges)]}[directory]]
         //Iterate through directory
           for (const file of fs.walkSync(directory)) {
             //Clean residual files
