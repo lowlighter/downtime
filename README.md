@@ -2,7 +2,7 @@
 
 ## 💬 How to use ?
 
-0. Fork this repository
+0. Fork this repository and enable GitHub actions on it
 1. Edit [config.yml](config.yml) to add your hosts and settings
 2. (optional) Go to repository `settings` and enable GitHub pages
 
