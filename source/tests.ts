@@ -1,6 +1,7 @@
 //Imports
-  import * as fs from "https://deno.land/std@0.80.0/fs/mod.ts"
-  import * as YAML from "https://deno.land/std@0.80.0/encoding/yaml.ts"
+  import { ensureDir, exists, walkSync } from "https://deno.land/std@0.97.0/fs/mod.ts"
+  import { readAll } from "https://deno.land/std@0.97.0/io/mod.ts"
+  import * as YAML from "https://deno.land/std@0.97.0/encoding/yaml.ts"
   import * as ejs from "https://deno.land/x/dejs@0.9.3/mod.ts"
   export default {}
 
@@ -11,7 +12,7 @@
 //Initialization
   const config = YAML.parse(await Deno.readTextFile("config.yml")) as config
   const debug = (left:string, right:string|null = null) => console.debug(`${(right ? left : "*").padEnd(24)} | ${(right ?? left).replace(/\n/g, "\\n").trim()}`)
-  await Promise.all(["hosts", "status"].map(directory => fs.ensureDir(directory)))
+  await Promise.all(["hosts", "status"].map(directory => ensureDir(directory)))
 
 //Test hosts
   const hosts = await Promise.all(config.hosts.map(async ({name, port = config.defaults?.port ?? 443, ...properties}:host) => {
@@ -24,7 +25,7 @@
     //Prepare host data
       const data = {name, created:new Date()} as host
       //Reload from file
-        if (await fs.exists(path.hosts)) {
+        if (await exists(path.hosts)) {
           Object.assign(data, JSON.parse(await Deno.readTextFile(path.hosts)))
           debug(`loaded ${path.hosts}`)
         }
@@ -42,7 +43,7 @@
         debug(hostname, `${command}`)
       //Execute command
         const test = Deno.run({cmd:["bash", "-c", command], stdout:"piped", stderr:"piped", stdin:"null"})
-        const stdio = (await Promise.all([test.stdout, test.stderr].map(async stdio => new TextDecoder().decode(await Deno.readAll(stdio))))).join("\n")
+        const stdio = (await Promise.all([test.stdout, test.stderr].map(async stdio => new TextDecoder().decode(await readAll(stdio))))).join("\n")
         const {success, code} = await test.status()
         const latency = Number(stdio.match(/received in (?<latency>[0-9.]+) seconds/m)?.groups?.latency)*1000
         debug(hostname, `exited with code ${code} (${success ? "success" : "failed"} - latency ${latency} ms)`)
@@ -105,18 +106,29 @@
           }
       }
     //Save result to file
-      const result = {icon:`http://s2.googleusercontent.com/s2/favicons?domain_url=${name}`, port, status_slow_ms,
+      const result = {port, status_slow_ms,
         ...data, updated, tests:tests+1, uptime, response_time, files:{filename, path},
       }
+      delete result.icon
       await Deno.writeTextFile(path.hosts, JSON.stringify(result))
 
+    //Extract domain and favicon
+      let domain = name
+      try { domain = new URL(`https://${name}`).hostname } catch {
+        try { domain = new URL(name).hostname } catch {}
+      }
+      debug(hostname, `fetching favicon from ${domain}`)
+      let favicon = null
+      try {
+        favicon = await fetch(`https://favicongrabber.com/api/grab/${domain}`).then(response => response.json()).then(({icons}) => icons.filter(({src = ""}) => /[.ico]/.test(src)).shift()?.src) ?? null
+      } catch {}
     //Load favicon as base64
-      const icon = await fetch(result.icon).then(response => response.blob()).then(blob => new Promise((solve, reject) => {
+      const icon = favicon ? await fetch(favicon).then(response => response.blob()).then(blob => new Promise((solve, reject) => {
         const reader = new FileReader()
         reader.onerror = reject
         reader.onload = () => solve(reader.result)
         reader.readAsDataURL(blob)
-      }))
+      })) : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABs0lEQVR4AWL4//8/RRjO8Iucx+noO0O2qmlbUEnt5r3Juas+hsQD6KaG7dqCKPgx72Pe9GIY27btZBrbtm3btm0nO12D7tVXe63jqtqqU/iDw9K58sEruKkngH0DBljOE+T/qqx/Ln718RZOFasxyd3XRbWzlFMxRbgOTx9QWFzHtZlD+aqLb108sOAIAai6+NbHW7lUHaZkDFJt+wp1DG7R1d0b7Z88EOL08oXwjokcOvvUxYMjBFCamWP5KjKBjKOpZx2HEPj+Ieod26U+dpg6lK2CIwTQH0oECGT5eHj+IgSueJ5fPaPg6PZrz6DGHiGAISE7QPrIvIKVrSvCe2DNHSsehIDatOBna/+OEOgTQE6WAy1AAFiVcf6PhgCGxEvlA9QngLlAQCkLsNWhBZIDz/zg4ggmjHfYxoPGEMPZECW+zjwmFk6Ih194y7VHYGOPvEYlTAJlQwI4MEhgTOzZGiNalRpGgsOYFw5lEfTKybgfBtmuTNdI3MrOTAQmYf/DNcAwDeycVjROgZFt18gMso6V5Z8JpcEk2LPKpOAH0/4bKMCAYnuqm7cHOGHJTBRhAEJN9d/t5zCxAAAAAElFTkSuQmCC"
 
     //Generate status SVG
       await Deno.writeTextFile(path.status, await ejs.renderFileToString("templates/status.svg", {host:{...result, icon}}))
@@ -155,7 +167,7 @@
         //List files to keep
           const keeping = [directory, ...hosts.map((host:host) => host.files.path[directory]), ...{hosts:["hosts/list"], status:[...hosts.map((host:host) => host.files.path.badges)]}[directory]]
         //Iterate through directory
-          for (const file of fs.walkSync(directory)) {
+          for (const file of walkSync(directory)) {
             //Clean residual files
               if (!keeping.includes(file.path.replace(/[/\\]/g, "/"))) {
                 await Deno.remove(file.path)

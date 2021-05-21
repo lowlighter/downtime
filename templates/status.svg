@@ -79,7 +79,10 @@
           <% if (host.title) { %>
             <%= host.title %>
           <% } else { %>
-            <%= host.name %>:<%= host.port %>
+            <%= host.name %>
+            <% if (host.port != 443) { %>
+              :<%= host.port %>
+            <% } %>
           <% } %>
           </h1>
           <div class="status">
@@ -96,7 +99,10 @@
         </header>
         <div class="url">
           <% if (host.title) { %>
-            <%= host.name %>:<%= host.port %>
+            <%= host.name %>
+            <% if (host.port != 443) { %>
+              :<%= host.port %>
+            <% } %>
           <% } else { %><pre> </pre><% } %>
         </div>
         <div class="metrics">
