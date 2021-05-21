@@ -24,7 +24,7 @@ jobs:
       - name: Additional setup
         run: |
           sudo apt-get install nmap
-          npm -g install svgo
+          sudo npm -g install svgo
           git config --local user.email "null@github.com"
           git config --local user.name "GitHub Action"
 
