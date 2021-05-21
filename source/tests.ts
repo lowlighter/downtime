@@ -117,11 +117,14 @@
       try { domain = new URL(`https://${name}`).hostname } catch {
         try { domain = new URL(name).hostname } catch {}
       }
-      debug(hostname, `fetching favicon from ${domain}`)
+      debug(hostname, `domain is ${domain}`)
       let favicon = null
       try {
         favicon = await fetch(`https://favicongrabber.com/api/grab/${domain}`).then(response => response.json()).then(({icons}) => icons.filter(({src = ""}) => /[.ico]/.test(src)).shift()?.src) ?? null
-      } catch {}
+        debug(hostname, `fetching favicon from ${favicon}`)
+      } catch {
+        debug(hostname, `no favicon found`)
+      }
     //Load favicon as base64
       const icon = favicon ? await fetch(favicon).then(response => response.blob()).then(blob => new Promise((solve, reject) => {
         const reader = new FileReader()
